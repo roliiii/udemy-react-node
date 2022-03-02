@@ -21,23 +21,21 @@ passport.use(new GoogleStrategy({
     clientSecret: keys.googleClientSecret,
     callbackURL: '/auth/google/callback',
     proxy: 'true'
-}, (accessToken, refreshToken, profile, done) => {
+}, async (accessToken, refreshToken, profile, done) => {
 
     /**
      * thenable...
      * https://mongoosejs.com/docs/promises.html#built-in-promises
      */
-    User.findOne({ googleId: profile.id }).then(async existingUser => {
-        if (existingUser) {
-            done(null, existingUser);
-        } else {
-            const savedUser = await new User({
-                googleId: profile.id
-            }).save();
-            done(null, savedUser);
-        }
+    const existingUser = await User.findOne({ googleId: profile.id })
 
-    })
+    if (existingUser) {
+       return done(null, existingUser);
+    } 
 
+    const savedUser = await new User({
+        googleId: profile.id
+    }).save();
+    done(null, savedUser);
  })
 );
